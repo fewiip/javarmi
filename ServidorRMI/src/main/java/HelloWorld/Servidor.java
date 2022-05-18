@@ -20,11 +20,19 @@ public class Servidor {
         //keyboard shortcut code tamplate
         try {
             //iniciara o servico de nomes 
-            Registry referenciaServicoNomes = LocateRegistry.createRegistry(1099);
             //LocateRegistry.createRegistry(1099);
+            Registry referenciaServicoNomes = LocateRegistry.createRegistry(1099);
+            
             InterfaceServ referenciaServidor = new ServImpl();
-            referenciaServicoNomes.rebind("HelloWorld", referenciaServidor);
-
+            
+            //void rebind(String name, Remote obj);
+            //Usado pelo servidor pra registrar o nome e a referencia de um objeto remoto
+            referenciaServicoNomes.rebind("servidor", referenciaServidor);
+            
+            InterfaceResource referenciaRecurso = new ServantResource();
+            referenciaServicoNomes.rebind("resource", referenciaRecurso);
+            
+            //o programa fica rodando pra sempre mesmo não tendo um while(true)
         }catch(Exception e){
             e.printStackTrace();
         }

@@ -11,5 +11,5 @@ import java.net.*;
  * @author felipe
  */
 public interface InterfaceServ extends Remote {
-    public void registrarInteresse(String texto, InterfaceCli referenciaCliente) throws RemoteException;
+    void registrarInteresse(String texto, InterfaceCli referenciaCliente) throws RemoteException;
 }

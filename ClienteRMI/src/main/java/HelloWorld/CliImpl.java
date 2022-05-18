@@ -12,17 +12,26 @@ import java.rmi.server.UnicastRemoteObject;
  * @author felipe
  */
 public class CliImpl extends UnicastRemoteObject implements InterfaceCli {
+    InterfaceServ referenciaServidor = null;
     
-    public CliImpl () throws RemoteException {
+    public CliImpl (InterfaceServ referenciaServidor) throws RemoteException {
         //recebe a referencia do servidor
         //e com essa referencia podera chamar o metodo registrar interesse do servidor
-        //InterfaceServ referenciaServidor = new InterfaceServ();
-        
+        this.referenciaServidor = referenciaServidor;
         //referenciaServidor.registrarInteresse("Oi", this);
     }
     
-    
     public void notificar(String texto) throws RemoteException{
-        System.out.println("cliente imprimindo mensagem recebida: " + texto);
+        //Cliente.podeusar = 1;
+        System.out.println("cliente imprimindo mensagem recebida: \"" + texto +"\"");
+        
+        try {
+            synchronized (Cliente.lock) {
+                Cliente.lock.notify();
+            }
+            //System.out.println("teste");
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 }

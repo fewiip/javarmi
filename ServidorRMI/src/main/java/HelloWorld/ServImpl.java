@@ -6,18 +6,26 @@ package HelloWorld;
 
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
+import java.util.ArrayList;
 
 /**
  *
  * @author felipe
  */
 public class ServImpl extends UnicastRemoteObject implements InterfaceServ {
+    ArrayList<InterfaceCli> listaClientes = new ArrayList<>();
     
     public ServImpl () throws RemoteException {}
     
     
     public void registrarInteresse(String texto, InterfaceCli referenciaCliente) throws RemoteException {
-        System.out.println("teste");
+        System.out.println("texto recebido: " + texto);
+        listaClientes.add(referenciaCliente);
+        
+        
+        for (InterfaceCli cli : listaClientes) {
+            cli.notificar("Test");
+        }
     }
     
 }
