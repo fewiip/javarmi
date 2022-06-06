@@ -7,12 +7,15 @@ package HelloWorld;
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
 
+import java.security.PublicKey;
 /**
  *
  * @author felipe
  */
 public class CliImpl extends UnicastRemoteObject implements InterfaceCli {
     InterfaceServ referenciaServidor = null;
+    DestinatarioAssiDig assinaturaDigitalCliente = new DestinatarioAssiDig();
+    private PublicKey pubKey;
     
     public CliImpl (InterfaceServ referenciaServidor) throws RemoteException {
         //recebe a referencia do servidor
@@ -21,15 +24,22 @@ public class CliImpl extends UnicastRemoteObject implements InterfaceCli {
         //referenciaServidor.registrarInteresse("Oi", this);
     }
     
-    public void notificar(String texto) throws RemoteException{
-        //Cliente.podeusar = 1;
-        System.out.println("cliente imprimindo mensagem recebida: \"" + texto +"\"");
-        
+    public void setPubKey(PublicKey pubKey) {
+        this.pubKey = pubKey;
+    }
+    
+    //public void notificar(String mensagem, byte[]assinatura,PublicKey publickey) throws RemoteException{
+    public void notificar(String mensagem, byte[]assinatura) throws RemoteException{    
+        System.out.println("cliente imprimindo mensagem recebida: \"" + mensagem +"\"");
+        int resultado = 0;
         try {
-            synchronized (Cliente.lock) {
-                Cliente.lock.notify();
-            }
-            //System.out.println("teste");
+            //a chave publica já tá guardada
+            resultado = assinaturaDigitalCliente.recebeMensagem(mensagem,assinatura,pubKey);
+            if (resultado == 1) {//assim so desbloqueia se tiver validado
+                synchronized (Cliente.lock) {
+                    Cliente.lock.notify();
+                }
+            } 
         } catch (Exception e) {
             e.printStackTrace();
         }

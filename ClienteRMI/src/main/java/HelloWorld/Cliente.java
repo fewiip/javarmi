@@ -4,27 +4,37 @@
  */
 package HelloWorld;
 
+import java.awt.event.ActionListener;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.util.*;
 
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
+import java.security.PublicKey;
+import java.security.SignatureException;
 /**
  *
  * @author felipe
  */
 public class Cliente {
     static Object lock = new Object();
-    static int podeusar = 0;
+    static Boolean timerAcabou = false; 
+
     
     public static void main(String[] args) {
+        
         String maquinaServidor = "rmi://localhost/";
         int portaServicoNomes = 1099;
+        PublicKey pubKey;
+        
         
         
         try {
+            
             Registry referenciaServicoNomes = LocateRegistry.getRegistry();
             //Registry referenciaServicoNomes = LocateRegistry.getRegistry(maquinaServidor, portaServicoNomes);
-            //Obteráareferênciadoservidor,consultandooSN
+            //Obterá a referência do servidor, consultando o SN
             
             /*referencia de objeto remota 
             identificacao pra um objeto, a gente so consegue invocar os metodos de um objeto remoto
@@ -36,22 +46,30 @@ public class Cliente {
             //Usado pelos clientes para buscar uma referencia de objeto remoto
             //Servente eh a classe que implementa a interface
             InterfaceServ referenciaServidor = (InterfaceServ) referenciaServicoNomes.lookup("servidor");
+            /*InterfaceResource referenciaRecurso = (InterfaceResource) referenciaServicoNomes.lookup("resource");
+            InterfaceBanco referenciaBanco = (InterfaceBanco) referenciaServicoNomes.lookup("banco");*/
             CliImpl serventeCliente = new CliImpl(referenciaServidor);
-            
-            //o programa ja ficaria rodando pra sempre mesmo não tendo um while(true)
-            
-            InterfaceResource referenciaRecurso = (InterfaceResource) referenciaServicoNomes.lookup("resource");
-            
-            
+
             String opcao = null;
             Scanner scan = new Scanner(System.in);
-                                        
+            
+            //primeira mensagem
+            PublicKey publicKey = referenciaServidor.getPublicKey();
+            serventeCliente.setPubKey(publicKey);//guarda a chave 
+
+            System.out.println("Chave publica do servidor:\n" + publicKey);
+
+
+            int banco = 0;
+
+            //o programa ja ficaria rodando pra sempre mesmo não tendo um while(true)                            
             while(true) {
+                banco = 0;
                 while(true){
-                        System.out.println("1: Entrar da seção critica");
+                        System.out.println("1: Entrar no Banco MySQL\n2. Entrar no MongoDB");
                         opcao = scan.nextLine();
-                        if (opcao.equals("1")) {
-                                break;
+                        if (opcao.equals("1") || opcao.equals("2")) {
+                            break;
                         }
                         System.out.println("Opcao invalida");
                 }
@@ -68,19 +86,34 @@ public class Cliente {
                 }
                 */
                 
+                int estado;
                 //so consegui fazendo assim
-                int estado = referenciaRecurso.requestCS(serventeCliente);
+                //message = referenciaRecurso.requestCS(serventeCliente);
+                if (opcao.equals("1")){
+                    banco = 1;
+                    estado = referenciaServidor.requestResource1(serventeCliente);
+                    //estado = referenciaRecurso.requestCS(serventeCliente);
+                }else{
+                    banco = 2;
+                    estado = referenciaServidor.requestResource2(serventeCliente);
+                    //estado = referenciaBanco.requestCS(serventeCliente);
+                }
                 
                 if (estado == 0){
                     synchronized (lock) {
-                        //System.out.println("Entrou no lock!");
                         lock.wait();
-                        //System.out.println("saiu do lock!");
+                        System.out.println("saiu do lock!");
                     }
                 }
                 
-                referenciaRecurso.query();
-                
+                if (banco == 1) {
+                    referenciaServidor.queryResource1();
+                    //referenciaRecurso.query();    
+                } else {
+                    referenciaServidor.queryResource2();
+                    //referenciaBanco.query();
+                }
+
                 while(true){
                     System.out.println("1: Sair da seção critica");
                     opcao = scan.nextLine();
@@ -89,8 +122,15 @@ public class Cliente {
                     }
                     System.out.println("Opcao invalida");
                 }
-                referenciaRecurso.exitCS();
-                podeusar = 0;
+
+                if (banco == 1) {
+                    referenciaServidor.exitResource1();
+                    //referenciaRecurso.exitCS();    
+                } else {
+                    referenciaServidor.exitResource2();
+                    //referenciaBanco.exitCS();
+                }
+                
             }
         } catch(Exception e){
             e.printStackTrace();
@@ -99,17 +139,3 @@ public class Cliente {
     }
 }
 
-final class CallBacksThread implements Runnable {
-    public CallBacksThread () {
-        Thread t = new Thread(this);
-        t.start();
-    }
-    
-    public void run () {
-        try {
-            
-        } catch (Exception e) {
-        }
-    }
-    
-}
